@@ -213,6 +213,45 @@ POST /v1/display/restore
 | Poll | GET | `/v1/devices/:deviceId/input` | `x-user-token` |
 | History | GET | `/v1/devices/:deviceId/history` | `x-user-token` |
 | Restore | POST | `/v1/display/restore` | `x-user-token` |
+| List Devices (Admin) | GET | `/v1/admin/devices` | `x-admin-token` |
+
+## Device IP Reporting
+
+When a display connects to `ai2x.link`, the gateway automatically records the device's source IP address. This is visible in the Admin Dashboard's device list and the `GET /v1/admin/devices` API.
+
+**How IP is captured:**
+- During WebSocket handshake, the real client IP is extracted from the `X-Forwarded-For` header (set by Caddy reverse proxy)
+- Falls back to `req.ip` or `socket.remoteAddress` if no proxy header is present
+- Only accessible at admin level (dashboard + `GET /v1/admin/devices`)
+- The public API `GET /v1/devices/displays` does **not** expose IP addresses
+
+**Admin API device response format:**
+
+```bash
+curl -H "x-admin-token: <token>" "https://ai2x.link/v1/admin/devices"
+
+# Response:
+# {
+#   "ok": true,
+#   "devices": [
+#     {
+#       "deviceId": "disp_xxx",
+#       "name": "Office Display",
+#       "ip": "203.0.113.42",
+#       "status": "online",
+#       "lastSeen": 1782630000000,
+#       "sessionId": "sess_xxx",
+#       "assignmentId": "as_xxx"
+#     }
+#   ]
+# }
+```
+
+**Future security directions (not yet implemented):**
+- **IP Whitelist** — Check source IP during `POST /v1/pair/claim`; only allow whitelisted IPs to pair
+- **Content restriction** — Non-whitelisted devices receive limited content (text-only, no PDF/interactive)
+- **Audit log filtering** — Query device activity by IP
+- **Dashboard management** — Manage IP whitelist from the admin panel
 
 ## Channel Index (Multi-Display Management)
 
