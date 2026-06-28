@@ -148,7 +148,7 @@ GET /v1/devices/displays
 Remote control: page flip, scroll, zoom, refresh.
 
 ```
-POST /v1/display/event
+POST /v1/devices/event
 ```
 
 ```json
@@ -195,7 +195,7 @@ POST /v1/display/restore
 | Revoke | POST | `/v1/pair/revoke` | `x-user-token` |
 | Status | GET | `/v1/pair/status?assignmentId=` | `x-user-token` |
 | List | GET | `/v1/devices/displays` | `x-user-token` |
-| Event | POST | `/v1/display/event` | `x-user-token` |
+| Event | POST | `/v1/devices/event` | `x-user-token` |
 | Poll | GET | `/v1/devices/:deviceId/input` | `x-user-token` |
 | History | GET | `/v1/devices/:deviceId/history` | `x-user-token` |
 | Restore | POST | `/v1/display/restore` | `x-user-token` |
@@ -349,7 +349,7 @@ curl -X POST "$BASE/v1/pair/renew" \
   -d '{"assignmentId":"as_xxx"}'
 
 # Event
-curl -X POST "$BASE/v1/display/event" \
+curl -X POST "$BASE/v1/devices/event" \
   -H "x-user-token: $TOKEN" \
   -d '{"assignmentId":"as_xxx", "event":"next_page"}'
 ```
@@ -371,7 +371,7 @@ curl -X POST "$BASE/v1/pair/renew" \
   -d '{"assignmentId":"as_xxx"}'
 
 # Event
-curl -X POST "$BASE/v1/display/event" \
+curl -X POST "$BASE/v1/devices/event" \
   -H "x-user-token: $TOKEN" \
   -d '{"assignmentId":"as_xxx", "event":"next_page"}'
 ```
