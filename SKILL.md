@@ -278,6 +278,32 @@ Agent:
 | Form | `fields` [{label,value,type}] | Key-value display |
 | List | `items` [{title,description}] | Bullet list |
 
+## Getting an API Token
+
+### Self-hosted Gateway
+
+If you run your own AI2X Gateway, your agent can generate tokens from the admin API:
+
+```bash
+curl -X POST http://localhost:8787/v1/admin/tokens \
+  -H "x-admin-token: <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"label":"my-agent", "scopes":"pair+push+control+history"}'
+
+# Response: { "ok":true, "token":"ak_xxx", ... }
+```
+
+### ai2x.link (Hosted Trial)
+
+For quick evaluation on ai2x.link, request a **temporary demo token** by emailing **Allan@msviso.com**. Demo tokens have limited quotas and may be rotated without notice.
+
+> ⚠️ **Demo tokens are temporary.** They may be revoked or rotated at any time.
+> For production use, please request a permanent token via email.
+
+### Self-Service Portal (Coming Soon)
+
+A self-service token portal at `ai2x.link/token` is in development. It will allow automatic token generation for evaluation purposes.
+
 ## Quick Reference
 
 ```bash

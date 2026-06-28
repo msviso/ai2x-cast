@@ -37,7 +37,12 @@ cp -r ai2x-cast/ /path/to/your/agent/shared/skills/ai2x/
 - **Self-hosted:** Set up the AI2X Gateway on your server, create tokens via the admin API
 - **ai2x.link:** Contact your provider for a scoped API token
 
-### 3. Configure
+### 3. Get a Token
+
+- **Self-hosted:** Your agent generates tokens from the admin API (see `SKILL.md`)
+- **ai2x.link:** Email **Allan@msviso.com** for a temporary demo token
+
+### 4. Configure
 
 Set your token in the agent's environment:
 
@@ -48,7 +53,7 @@ Set your token in the agent's environment:
 - Channel Index: shared/skills/ai2x/channels.json
 ```
 
-### 4. Cast!
+### 5. Cast!
 
 ```bash
 # Pair a display (read the 6-digit code from ai2x.link on your screen)
