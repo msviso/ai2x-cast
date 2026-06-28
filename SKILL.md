@@ -335,9 +335,30 @@ curl -H "x-admin-token: <admin-token>" "$BASE/v1/admin/tokens"
 
 The `source` field (`admin` | `web` | `demo`) helps differentiate token origins for batch management. Self-service portal creates tokens with `source: "web"`, so they can be purged without affecting admin-created tokens. See [Endpoint Reference](#endpoint-reference-summary) for all available routes.
 
-### Self-Service Portal (Coming Soon)
+### Self-Service Token Portal ✅
 
-A self-service token portal at `ai2x.link/token` is in development. It will allow automatic token generation for evaluation purposes.
+Get an evaluation token instantly at **[ai2x.link/token](https://ai2x.link/token)**.
+
+```bash
+# Or from the command line:
+curl -X POST https://ai2x.link/v1/token/request \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Your Name","email":"you@example.com"}'
+
+# Response:
+# {
+#   "ok": true,
+#   "token": "ak_...",
+#   "scopes": "pair+push",
+#   "dailyQuota": 50,
+#   "source": "web",
+#   "info": "Evaluation token — limited to 50 requests/day..."
+# }
+```
+
+> ⚠️ Demo tokens are limited to **50 requests/day** with `pair+push` scopes.
+> Rate-limited to **3 requests per IP per hour**.
+> For production use, email **Allan@msviso.com** for a permanent token.
 
 ## 🔒 Security Note
 
