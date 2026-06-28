@@ -155,7 +155,19 @@ POST /v1/devices/event
 { "assignmentId": "as_xxx", "event": "next_page" }
 ```
 
-Events: `next_page` | `prev_page` | `scroll_up` | `scroll_down` | `refresh` | `zoom_in` | `zoom_out`
+Events: `next_page` | `prev_page` | `scroll_up` | `scroll_down` | `refresh` | `zoom_in` | `zoom_out` | `goto_page`
+
+**Jump to page (PDF only):**
+
+```json
+{
+  "assignmentId": "as_xxx",
+  "event": "goto_page",
+  "data": {
+    "page": 8
+  }
+}
+```
 
 ### 8. Poll Buttons (v1.2)
 
@@ -196,6 +208,8 @@ POST /v1/display/restore
 | Status | GET | `/v1/pair/status?assignmentId=` | `x-user-token` |
 | List | GET | `/v1/devices/displays` | `x-user-token` |
 | Event | POST | `/v1/devices/event` | `x-user-token` |
+| Jump to Page | POST | `/v1/devices/event` (with `data.page`) | `x-user-token` |
+| Batch Purge Tokens | POST | `/v1/admin/tokens/purge` | `x-admin-token` |
 | Poll | GET | `/v1/devices/:deviceId/input` | `x-user-token` |
 | History | GET | `/v1/devices/:deviceId/history` | `x-user-token` |
 | Restore | POST | `/v1/display/restore` | `x-user-token` |
@@ -300,6 +314,27 @@ For quick evaluation on ai2x.link, request a **temporary demo token** by emailin
 > ⚠️ **Demo tokens are temporary.** They may be revoked or rotated at any time.
 > For production use, please request a permanent token via email.
 
+### Source-Based Token Management
+
+```bash
+# Create token with source classification
+curl -X POST "$BASE/v1/admin/tokens" \
+  -H "x-admin-token: <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"label":"my-agent", "scopes":"pair+push+control+history", "source":"web"}'
+
+# Batch delete all tokens from a source (e.g., web = self-service)
+curl -X POST "$BASE/v1/admin/tokens/purge" \
+  -H "x-admin-token: <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"source":"web"}'
+
+# List all tokens with source info
+curl -H "x-admin-token: <admin-token>" "$BASE/v1/admin/tokens"
+```
+
+The `source` field (`admin` | `web` | `demo`) helps differentiate token origins for batch management. Self-service portal creates tokens with `source: "web"`, so they can be purged without affecting admin-created tokens. See [Endpoint Reference](#endpoint-reference-summary) for all available routes.
+
 ### Self-Service Portal (Coming Soon)
 
 A self-service token portal at `ai2x.link/token` is in development. It will allow automatic token generation for evaluation purposes.
@@ -348,30 +383,13 @@ curl -X POST "$BASE/v1/pair/renew" \
   -H "x-user-token: $TOKEN" \
   -d '{"assignmentId":"as_xxx"}'
 
-# Event
+# Event (next/prev page)
 curl -X POST "$BASE/v1/devices/event" \
   -H "x-user-token: $TOKEN" \
   -d '{"assignmentId":"as_xxx", "event":"next_page"}'
-```
 
-```bash
-# Claim
-curl -X POST "$BASE/v1/pair/claim" \
-  -H "x-user-token: $TOKEN" \
-  -d '{"pairCode":"ABC123", "nickname":"Office"}'
-
-# Push
-curl -X POST "$BASE/v1/display" \
-  -H "x-user-token: $TOKEN" \
-  -d '{"assignmentId":"as_xxx", "content":{"title":"Alert","body":"**Message**"}}'
-
-# Renew
-curl -X POST "$BASE/v1/pair/renew" \
-  -H "x-user-token: $TOKEN" \
-  -d '{"assignmentId":"as_xxx"}'
-
-# Event
+# Jump to page (PDF only)
 curl -X POST "$BASE/v1/devices/event" \
   -H "x-user-token: $TOKEN" \
-  -d '{"assignmentId":"as_xxx", "event":"next_page"}'
+  -d '{"assignmentId":"as_xxx", "event":"goto_page", "data":{"page":8}}'
 ```
