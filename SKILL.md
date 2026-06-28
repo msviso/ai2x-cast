@@ -304,7 +304,55 @@ For quick evaluation on ai2x.link, request a **temporary demo token** by emailin
 
 A self-service token portal at `ai2x.link/token` is in development. It will allow automatic token generation for evaluation purposes.
 
+## 🔒 Security Note
+
+### Token Exposure
+
+All API examples use `$TOKEN` as an environment variable. This is the recommended pattern:
+
+```bash
+# ✅ Safe — token in env var, never in shell history
+TOKEN=ak_xxx
+curl -H "x-user-token: $TOKEN" ...
+
+# ❌ Unsafe — token hardcoded in command line, visible in history/process list
+curl -H "x-user-token: ak_xxx" ...
+```
+
+### Agent Context
+
+When an AI agent executes these commands, the token is **read from its secure configuration** (`TOOLS.md` or similar) and used as an environment variable. The full command is never displayed to the end user — agents report success/failure only.
+
+### Best Practices
+
+- Store your token in a config file or environment variable, never hardcode it
+- Use scoped tokens (limit to `push` only if you don't need pair/control)
+- Rotate tokens periodically via the admin API
+- Self-hosted users: keep your `ADMIN_TOKEN` in a `.env` file, never in git
+
 ## Quick Reference
+
+```bash
+# Claim
+curl -X POST "$BASE/v1/pair/claim" \
+  -H "x-user-token: $TOKEN" \
+  -d '{"pairCode":"ABC123", "nickname":"Office"}'
+
+# Push
+curl -X POST "$BASE/v1/display" \
+  -H "x-user-token: $TOKEN" \
+  -d '{"assignmentId":"as_xxx", "content":{"title":"Alert","body":"**Message**"}}'
+
+# Renew
+curl -X POST "$BASE/v1/pair/renew" \
+  -H "x-user-token: $TOKEN" \
+  -d '{"assignmentId":"as_xxx"}'
+
+# Event
+curl -X POST "$BASE/v1/display/event" \
+  -H "x-user-token: $TOKEN" \
+  -d '{"assignmentId":"as_xxx", "event":"next_page"}'
+```
 
 ```bash
 # Claim
