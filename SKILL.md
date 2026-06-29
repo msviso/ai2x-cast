@@ -105,7 +105,8 @@ Response: `{"ok":true, "delivered":true, "templateId":"document.v2", "viewId":"v
 | `data` | object | optional | `{type, labels, datasets}` — chart data |
 | `buttons` | array | optional | `[{id, label, style?}]` — interactive buttons |
 | `level` | string | optional | `info` \| `warning` \| `critical` — alert level |
-| `type` | string | optional | Force template: `document` \| `image` \| `pdf` \| `chart` \| `interactive` |
+| `sections` | array | optional | `[{type, body?, url?, items?, ...}]` — mixed multi-section (auto-routes to `mixed.v2` when set) |
+| `type` | string | optional | Force template: `document` \| `mixed` \| `image` \| `pdf` \| `chart` \| `cards` \| `interactive` |
 
 ### 3. Renew Lease
 
@@ -197,12 +198,84 @@ POST /v1/display/restore
 { "assignmentId": "as_xxx", "viewId": "vw_xxx" }
 ```
 
+### 11. Mixed Content (v1.2)
+
+Push multi-section content with text, images, cards, and tables in a single view. Use the explicit template endpoint for maximum control, or smart routing with `content.type: "mixed"` for simplicity.
+
+#### Explicit Template (POST /v1/push/content)
+
+```
+POST /v1/push/content
+```
+
+```json
+{
+  "assignmentId": "as_xxx",
+  "templateId": "mixed.v2",
+  "data": {
+    "title": "Dashboard",
+    "sections": [
+      {
+        "type": "text",
+        "body": "## Progress\n\n- ✅ Review complete\n- 🚧 Testing in progress"
+      },
+      {
+        "type": "image",
+        "url": "https://example.com/chart.png",
+        "caption": "Temp trend"
+      },
+      {
+        "type": "cards",
+        "items": [
+          { "title": "✅ PCB", "description": "Done", "meta": "DONE" },
+          { "title": "🔄 FW", "description": "Testing", "meta": "WIP" }
+        ]
+      },
+      {
+        "type": "table",
+        "headers": ["Item", "Status", "Owner"],
+        "rows": [["PCB Rev 1.0", "✅ Done", "Alice"], ["FW v1.2", "🚧 WIP", "Bob"]]
+      }
+    ]
+  }
+}
+```
+
+#### Smart Routing (POST /v1/display)
+
+Set `content.type: "mixed"` with `content.sections` — the gateway automatically routes to `mixed.v2`:
+
+```json
+{
+  "assignmentId": "as_xxx",
+  "content": {
+    "title": "Dashboard",
+    "type": "mixed",
+    "sections": [
+      { "type": "text", "body": "# Text block" },
+      { "type": "image", "url": "...", "caption": "..." },
+      { "type": "cards", "items": [...] }
+    ]
+  }
+}
+```
+
+**Supported section types:**
+
+| Type | Required Fields | Optional Fields |
+|------|----------------|----------------|
+| `text` | `body` (markdown) | — |
+| `image` | `url` | `caption` |
+| `cards` | `items` [{title, description?, meta?}] | — |
+| `table` | `headers` + `rows` | — |
+
 ## Endpoint Summary
 
 | Purpose | Method | Endpoint | Auth |
 |---------|--------|----------|------|
 | Pair | POST | `/v1/pair/claim` | `x-user-token` |
 | Push | POST | `/v1/display` | `x-user-token` |
+| Push (precise) | POST | `/v1/push/content` | `x-user-token` |
 | Renew | POST | `/v1/pair/renew` | `x-user-token` |
 | Revoke | POST | `/v1/pair/revoke` | `x-user-token` |
 | Status | GET | `/v1/pair/status?assignmentId=` | `x-user-token` |
@@ -452,4 +525,21 @@ curl -X POST "$BASE/v1/devices/event" \
 curl -X POST "$BASE/v1/devices/event" \
   -H "x-user-token: $TOKEN" \
   -d '{"assignmentId":"as_xxx", "event":"goto_page", "data":{"page":8}}'
+
+# Mixed content (text + image + cards)
+curl -X POST "$BASE/v1/push/content" \
+  -H "x-user-token: $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "assignmentId": "as_xxx",
+    "templateId": "mixed.v2",
+    "data": {
+      "title": "Dashboard",
+      "sections": [
+        {"type": "text", "body": "# Overview\n- Task A: done"},
+        {"type": "image", "url": "https://example.com/chart.png", "caption": "Chart"},
+        {"type": "cards", "items": [{"title": "Task A", "meta": "✅"}]}
+      ]
+    }
+  }'
 ```
