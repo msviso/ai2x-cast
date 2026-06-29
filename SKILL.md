@@ -286,6 +286,27 @@ Set `content.type: "mixed"` with `content.sections` — the gateway automaticall
 | History | GET | `/v1/devices/:deviceId/history` | `x-user-token` |
 | Restore | POST | `/v1/display/restore` | `x-user-token` |
 
+## Error Handling
+
+### Common Error Codes
+
+| HTTP Status | Error Response | Meaning | Agent Action |
+|-------------|---------------|---------|--------------|
+| 401 | `{"error":"Invalid or expired x-user-token"}` | Token invalid, expired, or daily quota (1000) exhausted | Check token validity. Retry after 1s on quota. Contact admin if persistent. |
+| 404 | `{"error":"Pair code not found"}` | Pair code expired or already claimed | Ask user to refresh the display page for a new code. |
+| 409 | `{"error":"Assignment not active"}` | Lease expired or display disconnected | Renew lease or re-pair the display. |
+| 409 | `{"error":"Display already assigned"}` | Another agent claimed this display | Wait for lease to expire or ask user to revoke from dashboard. |
+| 415 | `{"error":"Unsupported Media Type"}` | Missing `Content-Type: application/json` header | Always include `Content-Type: application/json` in POST requests. |
+| 429 | `{"error":"Rate limit exceeded"}` | Too many requests per second | Wait 1-2 seconds before retrying. Token-level limit: 1000/day, resets UTC midnight. |
+| 413 | `{"error":"Payload Too Large"}` | Content exceeds 50MB | Reduce payload size, especially PDF/images. Use proxy for large files. |
+
+### General Rules
+
+- **Always include** `Content-Type: application/json` header on POST requests.
+- **Renew after push** — lease lasts 5 minutes by default. Call `POST /v1/pair/renew` after each successful push.
+- **Don't retry blindly** — if `401` persists, escalate to the user; don't keep hammering the API.
+- **Check error before retry** — a 409 (lease expired) needs re-pairing, not retry.
+
 ## Channel Index (Multi-Display Management)
 
 Each agent maintains `channels.json` to map display nicknames to assignment IDs.
