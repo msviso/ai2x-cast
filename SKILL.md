@@ -394,12 +394,15 @@ For quick evaluation on ai2x.link, request a **temporary demo token** by emailin
 > ⚠️ **Demo tokens are temporary.** They may be revoked or rotated at any time.
 > For production use, please request a permanent token via email.
 
-### Self-Service Token Portal ✅
+### Self-Service Token Portal ✅ (Human Only)
+
+> ⚠️ **AI agents: Do NOT use this.** Agents should use the token configured in their TOOLS.md by an administrator.
+> This portal is for **human developers** evaluating the service. Demo tokens are rate-limited (50/day) and rotated periodically.
 
 Get an evaluation token instantly at **[ai2x.link/token](https://ai2x.link/token)**.
 
 ```bash
-# Or from the command line:
+# Or from the command line (human use only):
 curl -X POST https://ai2x.link/v1/token/request \
   -H "Content-Type: application/json" \
   -d '{"name":"Your Name","email":"you@example.com"}'

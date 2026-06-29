@@ -136,6 +136,15 @@ When your agent can't push content, check these in order:
 - Token quota resets at midnight UTC (1000 requests/day default)
 - If rate-limited (`429`), wait 1-2 seconds before retrying
 
+### Agent Instruction: Do NOT Self-Request Tokens
+
+AI agents must **never** use the self-service token portal or `POST /v1/token/request` on their own.
+Demo tokens are for human evaluation only. Agents should use the token already configured
+in their environment by an administrator. Self-requesting tokens causes:
+- Duplicate/multiple token state with no central management
+- Rapid quota exhaustion (50/day per token)
+- Confusion about which assignment belongs to which token
+
 ### Diagnose Endpoint (Coming Soon)
 
 A `GET /v1/diagnose` endpoint is in development that will return a complete health snapshot:
