@@ -53,7 +53,7 @@ Set your token in the agent's environment:
 - Channel Index: shared/skills/ai2x/channels.json
 ```
 
-### 5. Cast!
+### 4. Cast!
 
 ```bash
 # Pair a display (read the 6-digit code from ai2x.link on your screen)
@@ -102,6 +102,50 @@ See [SKILL.md](./SKILL.md) for full API endpoint reference.
 
 - An AI2X Gateway instance (self-hosted or ai2x.link)
 - An API token with appropriate scopes
+
+## Troubleshooting & Error Handling
+
+### Agent Error Dictionary
+
+When your AI agent encounters an error from the AI2X API, here's how to interpret and resolve it:
+
+| HTTP | Error Response | Meaning | Agent Action |
+|------|---------------|---------|--------------|
+| 401 | `{"error":"Invalid or expired x-user-token"}` | Token invalid, expired, or daily quota (1000) exhausted | Check token validity. Retry after 1s on quota. Contact admin if persistent. |
+| 404 | `{"error":"Pair code not found"}` | Pair code expired (TTL: 180s) or already claimed | Ask user to refresh the display page (ai2x.link) for a new 6-digit code. |
+| 409 | `{"error":"Assignment not active"}` | Lease expired or display disconnected | Renew lease (`POST /v1/pair/renew`) or re-pair the display. |
+| 409 | `{"error":"Display already assigned"}` | Another agent/claim on this display | Wait for lease to expire or ask user to release from dashboard. |
+| 415 | `{"error":"Unsupported Media Type"}` | Missing `Content-Type: application/json` header | Always include `Content-Type: application/json` on POST requests. |
+| 429 | `{"error":"Rate limit exceeded"}` | Too many requests per second | Wait 1-2 seconds before retrying. Token limit: 1000/day (resets UTC midnight). |
+| 413 | `{"error":"Payload Too Large"}` | Content exceeds 50MB | Reduce size (especially PDF/images). Use Gateway proxy for large files. |
+
+### Quick Agent Checklist
+
+When your agent can't push content, check these in order:
+
+1. **Is the token valid?** → `401` → check API key, quota remaining
+2. **Is the assignment active?** → `409 Assignment not active` → lease expired, renew or re-pair
+3. **Is the display online?** → display must be on `ai2x.link` with active WebSocket
+4. **Is the pair code still showing?** → `404 Pair code not found` → codes expire after 180s, refresh page
+5. **Is Content-Type set?** → `415` → always include `Content-Type: application/json`
+
+### Token Best Practices
+
+- Store the token in a config file or environment variable, never hardcode it in shell commands
+- Use scoped tokens (e.g., `push` only if you don't need pair/control)
+- Token quota resets at midnight UTC (1000 requests/day default)
+- If rate-limited (`429`), wait 1-2 seconds before retrying
+
+### Diagnose Endpoint (Coming Soon)
+
+A `GET /v1/diagnose` endpoint is in development that will return a complete health snapshot:
+- Token validity, label, scopes, usage today vs quota
+- All assignments with active/expired status and remaining lease time
+- Display online/offline status and pairing state
+
+This lets your agent self-diagnose with one API call instead of guessing which error code applies.
+
+---
 
 ## License
 
