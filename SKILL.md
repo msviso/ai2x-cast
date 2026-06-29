@@ -282,49 +282,9 @@ Set `content.type: "mixed"` with `content.sections` — the gateway automaticall
 | List | GET | `/v1/devices/displays` | `x-user-token` |
 | Event | POST | `/v1/devices/event` | `x-user-token` |
 | Jump to Page | POST | `/v1/devices/event` (with `data.page`) | `x-user-token` |
-| Batch Purge Tokens | POST | `/v1/admin/tokens/purge` | `x-admin-token` |
 | Poll | GET | `/v1/devices/:deviceId/input` | `x-user-token` |
 | History | GET | `/v1/devices/:deviceId/history` | `x-user-token` |
 | Restore | POST | `/v1/display/restore` | `x-user-token` |
-| List Devices (Admin) | GET | `/v1/admin/devices` | `x-admin-token` |
-
-## Device IP Reporting
-
-When a display connects to `ai2x.link`, the gateway automatically records the device's source IP address. This is visible in the Admin Dashboard's device list and the `GET /v1/admin/devices` API.
-
-**How IP is captured:**
-- During WebSocket handshake, the real client IP is extracted from the `X-Forwarded-For` header (set by Caddy reverse proxy)
-- Falls back to `req.ip` or `socket.remoteAddress` if no proxy header is present
-- Only accessible at admin level (dashboard + `GET /v1/admin/devices`)
-- The public API `GET /v1/devices/displays` does **not** expose IP addresses
-
-**Admin API device response format:**
-
-```bash
-curl -H "x-admin-token: <token>" "https://ai2x.link/v1/admin/devices"
-
-# Response:
-# {
-#   "ok": true,
-#   "devices": [
-#     {
-#       "deviceId": "disp_xxx",
-#       "name": "Office Display",
-#       "ip": "203.0.113.42",
-#       "status": "online",
-#       "lastSeen": 1782630000000,
-#       "sessionId": "sess_xxx",
-#       "assignmentId": "as_xxx"
-#     }
-#   ]
-# }
-```
-
-**Future security directions (not yet implemented):**
-- **IP Whitelist** — Check source IP during `POST /v1/pair/claim`; only allow whitelisted IPs to pair
-- **Content restriction** — Non-whitelisted devices receive limited content (text-only, no PDF/interactive)
-- **Audit log filtering** — Query device activity by IP
-- **Dashboard management** — Manage IP whitelist from the admin panel
 
 ## Channel Index (Multi-Display Management)
 
@@ -406,46 +366,12 @@ Agent:
 
 ## Getting an API Token
 
-### Self-hosted Gateway
-
-If you run your own AI2X Gateway, your agent can generate tokens from the admin API:
-
-```bash
-curl -X POST http://localhost:8787/v1/admin/tokens \
-  -H "x-admin-token: <admin-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"label":"my-agent", "scopes":"pair+push+control+history"}'
-
-# Response: { "ok":true, "token":"ak_xxx", ... }
-```
-
 ### ai2x.link (Hosted Trial)
 
 For quick evaluation on ai2x.link, request a **temporary demo token** by emailing **Allan@msviso.com**. Demo tokens have limited quotas and may be rotated without notice.
 
 > ⚠️ **Demo tokens are temporary.** They may be revoked or rotated at any time.
 > For production use, please request a permanent token via email.
-
-### Source-Based Token Management
-
-```bash
-# Create token with source classification
-curl -X POST "$BASE/v1/admin/tokens" \
-  -H "x-admin-token: <admin-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"label":"my-agent", "scopes":"pair+push+control+history", "source":"web"}'
-
-# Batch delete all tokens from a source (e.g., web = self-service)
-curl -X POST "$BASE/v1/admin/tokens/purge" \
-  -H "x-admin-token: <admin-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"source":"web"}'
-
-# List all tokens with source info
-curl -H "x-admin-token: <admin-token>" "$BASE/v1/admin/tokens"
-```
-
-The `source` field (`admin` | `web` | `demo`) helps differentiate token origins for batch management. Self-service portal creates tokens with `source: "web"`, so they can be purged without affecting admin-created tokens. See [Endpoint Reference](#endpoint-reference-summary) for all available routes.
 
 ### Self-Service Token Portal ✅
 
