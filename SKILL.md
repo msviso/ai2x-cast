@@ -26,7 +26,63 @@ use cases:
   - "把股價圖 cast 上大螢幕"
 ```
 
-### Agent Response Examples
+### Core Scenario: Smart Glasses + Nearby Display
+
+AI2X Cast shines when paired with **audio-first wearables** (smart glasses without display, wireless earbuds). The glasses handle voice I/O; the nearest screen handles the visual heavy lifting.
+
+---
+
+#### Scenario 1: Meeting Minutes → Instant Screen
+
+> User arrives at a meeting wearing smart glasses. The voice assistant transcribes the meeting.
+> After the meeting, the user says:
+> *「幫我整理今天的會議記錄，投到旁邊的螢幕」*
+
+**Agent flow:**
+1. Summarize the meeting transcript into structured notes (title, action items, decisions)
+2. Look up `channels.json` → find the nearest active display → get `assignmentId`
+3. `POST /v1/push/content` with `templateId: "mixed.v2"` — text section + table section (action items)
+4. `POST /v1/pair/renew` to keep lease alive
+5. Reply: *「📋 會議記錄已整理完成，顯示在旁邊螢幕上了。要我再調整或寄出嗎？」*
+
+The user sees the full meeting minutes on screen, reviews visually, and issues the next command by voice.
+
+---
+
+#### Scenario 2: Email Review & Approve
+
+> Agent drafts a reply to an incoming email and needs user approval before sending.
+> The user is not at a desk, but nearby there is a display.
+
+> User: *「那封郵件幫我處理一下」*
+
+**Agent flow:**
+1. Fetch the latest email, draft a reply
+2. `POST /v1/push/content` with `templateId: "mixed.v2"` — show the original email body, then the drafted reply, and a card with approval action
+3. `POST /v1/devices/event` with button(s): "✅ Send", "✏️ Edit Draft", "📝 Reply Manually"
+4. Report: *「📧 我把郵件和草擬的回覆投到螢幕上了。看一下內容，按『Send』或直接跟我說想怎麼改」*
+
+> User glances at the screen, says *「同意，送出」*
+> Agent executes the send.
+
+---
+
+#### Scenario 3: Voice-Initiated Document Display
+
+> User is on a voice call discussing a project with a client. The client asks about a spec.
+> The user, wearing earbuds, says to the agent:
+> *「幫我把那份 datatasheet 找出來，投到螢幕上」*
+
+**Agent flow:**
+1. Search internal knowledge base or AnythingLLM for the document
+2. `POST /v1/push/content` with `templateId: "mixed.v2"` — document title, key specs table, and a link/PDF reference
+3. Report: *「📄 文件找到並投到螢幕上了，重點在 spec 表格那段」*
+
+The user sees the spec on the display during the call, no phone or laptop needed.
+
+---
+
+### Quick Reference: Basic Examples
 
 > User: Push today's calendar to the meeting room screen
 > Agent:
