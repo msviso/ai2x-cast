@@ -19,6 +19,50 @@ Agent:    (pushes to the display) → 🖥️ Screen updates instantly
 
 **It works in about 5 minutes.** No server setup required if you use `ai2x.link`.
 
+## Why AI2X Cast?
+
+Screens are everywhere — but getting content *onto* them is still painful.
+
+Think about a typical day:
+
+- Your calendar, dashboards, and documents live on your laptop or phone.
+- The TV in the meeting room, the tablet in the kitchen, the monitor in the workshop — they just sit there.
+- Showing something on them means **cables, casting apps, file transfers**, or building a custom app.
+
+Meanwhile, your AI agent can already *generate* anything — summaries, charts, PDFs, slides, alerts. But it has no way to *show* it on the screen in front of you. That last meter is missing.
+
+**AI2X Cast is that last meter.** It turns any screen with a browser into an AI output device:
+
+- No app to install on the display, no HDMI, no dedicated hardware.
+- Any browser — smart TV, tablet, Raspberry Pi, old monitor — becomes a live screen for your agent.
+- Think of it as **AirPlay for AI agents**: your agent pushes, the screen shows, in real time.
+
+### What it feels like
+
+```
+Morning, 5 minutes before the meeting.
+
+You:   「把今天的議程和上週的銷售圖表投到會議室螢幕」
+Agent: (pairs the meeting-room display, pushes agenda + chart) → 🖥️ screen updates instantly
+
+You:   「第三頁那張圖，幫我標出下滑的區域」
+Agent: (redraws the chart, pushes the updated version) → 🖥️ updates again
+```
+
+No cables. No searching for files. No "can everyone see my screen?"
+
+### Where you'd use it
+
+| Scenario | What the agent pushes |
+|----------|----------------------|
+| **Meeting room** | Agenda, charts, slides — spoken summary on the TV |
+| **Factory / workshop** | Work orders, SOPs, live alerts on the shop-floor monitor |
+| **Home** | Recipe on the kitchen tablet, family calendar on the living-room TV |
+| **Retail / signage** | Promotions, queue numbers — with interactive buttons on screen |
+| **Front desk** | Waiting screens, call numbers, interactive Q&A |
+
+And because displays are **two-way** (buttons on screen → your agent reacts), it works for things like confirmations, ordering, and surveys — not just one-way casting.
+
 ## Try It Now (5 minutes)
 
 1. Open `https://ai2x.link` on any screen (TV, tablet, monitor) → a **6-digit pair code** appears
