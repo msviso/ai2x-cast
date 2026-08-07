@@ -63,6 +63,14 @@ No cables. No searching for files. No "can everyone see my screen?"
 
 And because displays are **two-way** (buttons on screen → your agent reacts), it works for things like confirmations, ordering, and surveys — not just one-way casting.
 
+### From earbuds to the big screen
+
+Your AI agent can already talk to you anywhere — through earbuds or a smart-glasses mic (STT/TTS), hands-free, no screen required. Great for quick answers on the move.
+
+But some moments need more than a voice in your ear: a chart to explain, a presentation to give, a complex dashboard to review together. That's when a screen matters — and AI2X Cast is how your agent takes over that screen: it pushes the content, updates it live, and lets people on the other side interact (tap, confirm, navigate).
+
+**Earbuds for the conversation. A display for the moment that matters.**
+
 ## Try It Now (5 minutes)
 
 1. Open `https://ai2x.link` on any screen (TV, tablet, monitor) → a **6-digit pair code** appears
