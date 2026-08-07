@@ -152,6 +152,113 @@ POST /v1/display
 
 Response: `{"ok":true, "delivered":true, "templateId":"document.v2", "viewId":"vw_xxx"}`
 
+### 2a. Browser Speech (`speech.v1`)
+
+Use this when the user asks an agent to speak through a paired AI2X display.
+AI2X transmits **text only**; the paired browser synthesizes and plays the
+speech with its built-in Web Speech API. Do **not** generate, upload, or send a
+TTS audio file for this feature.
+
+```json
+POST /v1/display
+{
+  "assignmentId": "as_xxx",
+  "content": {
+    "type": "speech",
+    "text": "會議五分鐘後開始。",
+    "lang": "zh-TW",
+    "rate": 1,
+    "pitch": 1
+  }
+}
+```
+
+Rules:
+
+1. `text` is required (1–4000 characters). `lang` is optional BCP 47 language
+   tag; `rate` and `pitch` are optional numbers from 0.5 to 2.
+2. The display user must first press **Enable speech** once on that browser.
+   This is a local browser user-activation requirement, not a microphone or
+   system permission prompt. Later speech pushes can play automatically until
+   the page/browser state is cleared.
+3. The display needs a browser with Web Speech API support and usable speakers.
+   If either is unavailable, report that device capability limitation; never
+   fall back to audio-file upload.
+4. The display shows **Stop** to cancel current speech. A later content push
+   also stops any in-progress speech.
+5. Speech pushes are intentionally ephemeral: their text is excluded from
+   AI2X Push History. It is still transmitted to AI2X to reach the display, so
+   do not use it for content the user has not authorized to send to AI2X.
+
+### 2b. Private PDF and Image Assets (required for local files)
+
+Use this workflow for any PDF or image that is private, local, or supplied by the user. **Never** publish the source file, create a static public URL, or embed it as a data URI / HTML in `document.v2`.
+
+1. Read the file bytes and Base64-encode them.
+2. Upload using `POST /v1/assets` with an allowed `contentType`: `application/pdf`, `image/jpeg`, `image/png`, `image/gif`, `image/webp`, or `image/svg+xml`.
+3. Require `ok: true`; use only the returned signed `url` in the display request.
+4. Force the structured renderer explicitly—signed asset URLs do not contain a `.pdf` or image filename suffix, so URL auto-detection is not reliable.
+5. On success, renew the lease. If the display cannot render, report the failure; **do not** fall back to public hosting, HTML, or data URIs.
+
+```json
+POST /v1/assets
+{
+  "filename": "report.pdf",
+  "contentType": "application/pdf",
+  "dataBase64": "<base64 file bytes>",
+  "ttlMs": 600000
+}
+```
+
+```json
+POST /v1/display
+{
+  "assignmentId": "as_xxx",
+  "content": {
+    "type": "pdf",
+    "title": "Report",
+    "url": "<signed URL returned by /v1/assets>",
+    "page": 1
+  }
+}
+```
+
+For images, set `"type": "image"` and optionally add `"caption"`. The source-asset limit is 25 MB and the JSON request limit is 35 MB. Signed URLs default to five minutes (maximum one hour); upload again after expiry. Verify an uploaded asset read returns the original bytes and `Cache-Control: private, no-store`.
+
+### Privacy explanation for users
+
+When a user asks how a local PDF or image is handled, explain the current boundary plainly:
+
+> The file is sent over HTTPS to the AI2X gateway, stored in its private server volume, and shown through a signed link that normally expires in five minutes. It is not published as a public web file and the display/browser is instructed not to cache it.
+>
+> This reduces exposure, but it is **not zero-risk or end-to-end encryption**: the file reaches our server; an unexpired signed link can be used by anyone who obtains it; and, at present, expiry blocks access but does not yet automatically delete the stored source file. Do not promise that the file disappears after five minutes.
+
+For highly confidential, regulated, personal, or contractual material, state that the current hosted workflow is not approved until the deployment has at least automatic deletion/retention controls, URL-query redaction in proxy logs, and scoped, revocable per-agent tokens. Never reassure users by claiming that an upload is "completely private", "risk-free", or "never stored".
+
+### 2c. Prepare an Office document for private display
+
+LibreOffice can convert Office documents to a PDF locally before the
+private-asset workflow. Use it when the user asks to cast a local
+`.pptx`, `.docx`, `.xlsx`, or OpenDocument file. Conversion is local; the PDF
+is sent to AI2X only when the separate `/v1/assets` upload is performed.
+
+```bash
+SOURCE="/absolute/path/to/slides.pptx"
+OUTDIR="$(mktemp -d /tmp/ai2x-libreoffice.XXXXXX)"
+PROFILE="$(mktemp -d /tmp/ai2x-lo-profile.XXXXXX)"
+soffice --headless "-env:UserInstallation=file://$PROFILE" \
+  --convert-to pdf --outdir "$OUTDIR" "$SOURCE"
+PDF="$OUTDIR/$(basename "${SOURCE%.*}").pdf"
+test -s "$PDF"
+```
+
+`soffice` is usually on PATH on macOS; if discovery fails, use
+`/Applications/LibreOffice.app/Contents/MacOS/soffice`. Always write to a new
+temporary output directory, verify the PDF is non-empty, and visually check
+layout/fonts for presentation-quality material. Upload only that verified PDF
+through `/v1/assets`, then cast its returned signed URL with `type: "pdf"`.
+Do not treat conversion as a substitute for the privacy disclosure above.
+
 | Content Field | Type | Required | Description |
 |--------------|------|----------|-------------|
 | `title` | string | optional | Content title |
@@ -430,12 +537,13 @@ Agent:
 |------|---------------|------------|
 | Document | `body` (markdown) | Formatted document |
 | Image | `url` | Full-width image |
-| PDF | `url` (.pdf) | PDF viewer with page nav |
+| PDF | `type: "pdf"`, `url` | PDF viewer with page nav; use explicit type for signed/private URLs |
 | YouTube | `url` | Embedded player |
 | Cards | `items` [{title,description,meta}] | Card list |
 | Chart | `data` {type,labels,datasets} | Line or pie chart |
 | Alert | `level` (info/warning/critical) | Colored alert |
 | Interactive | `buttons` [{id,label,style}] | Clickable buttons |
+| Todo | `items` [{id,label,checked?,disabled?}] | Checkbox list with toggle events |
 | Gallery | `items` [{url,caption}] | Image gallery |
 | Mixed | `sections` | Multi-section layout |
 | Form | `fields` [{label,value,type}] | Key-value display |

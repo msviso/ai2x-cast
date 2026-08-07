@@ -1,62 +1,99 @@
 # AI2X Cast 🖥️
 
-> **Agent-to-Screen Transport for OpenClaw.**  
-> Let your AI agent push content to any display with a simple `cast` command.
+> **Your AI agent pushes content to any screen with a browser.**  
+> Text, images, PDFs, charts, buttons — on the TV, tablet, or monitor next to you, in real time.
 
-AI2X Cast bridges AI agents and physical displays. No CMS, no templates, no content management — just a lightweight transport layer that lets your agent control what appears on screen, in real time.
+AI2X Cast is a skill for AI agents (OpenClaw, Claude, ChatGPT, …). Your agent uses it to show
+content on any display. No app to install, no HDMI cable — just open a URL in a browser.
 
 ```
-User: 「Push today's calendar to the meeting room screen」
-Agent: (POST /v1/display) → 🖥️ Display updates instantly
+You say:  「把今天的行事曆投到會議室螢幕」
+Agent:    (pushes to the display) → 🖥️ Screen updates instantly
 ```
 
-## Features
+**What you need to start:**
 
-| Capability | Description |
-|-----------|-------------|
-| 🔗 **Pair** | 6-digit pair code + QR code, AirPlay-style pairing |
-| 📄 **Cast** | Push documents, images, PDFs, charts, alerts, cards |
-| 🔘 **Interactive** | Add buttons on screen — users tap, agent reacts |
-| 📜 **History** | Browse and restore last 5 pushed items |
-| 🔄 **Auto-renew** | Lease-based session with auto-extend |
-| 🌐 **Multi-screen** | Manage multiple displays by nickname |
-| 🔐 **Self-hosted** | You own the infrastructure (or use ai2x.link) |
+- An AI agent (OpenClaw or similar)
+- A screen with a browser open at `https://ai2x.link`
+- An API token (free demo token available — see below)
+
+**It works in about 5 minutes.** No server setup required if you use `ai2x.link`.
+
+## Try It Now (5 minutes)
+
+1. Open `https://ai2x.link` on any screen (TV, tablet, monitor) → a **6-digit pair code** appears
+2. Get a free **demo token** at `https://ai2x.link/token` (human only — see Token section)
+3. Give your agent the one-prompt below → it installs the skill and guides you through pairing
+
+## Install with One Prompt
+
+Copy this message and paste it to your agent:
+
+> I'd like to install the AI2X Cast skill so you can push content to my displays.
+> The skill is at https://github.com/msviso/ai2x-cast — please install it,
+> then tell me when it's ready.
+
+After it installs, paste this second message:
+
+> Now check that it works and explain how I get an API token
+> (do not request one yourself). I want to start testing soon.
+
+（中文版：直接把上面兩段訊息複製貼給你的 agent 即可）
+
+The agent will install the skill, check compatibility and availability, and guide you through
+asking for a token. **Tokens are issued to you, the user — your agent must not request tokens on its own.**
+
+Or install manually with the steps below.
 
 ## Quick Start
 
-### 1. Install Skill
+### 1. Install the Skill
 
-Copy `ai2x-cast/` into your OpenClaw agent's shared skills:
+Get the skill and copy it into your agent's skills folder:
 
 ```bash
-cp -r ai2x-cast/ /path/to/your/agent/shared/skills/ai2x/
+git clone https://github.com/msviso/ai2x-cast.git
+cp -r ai2x-cast/ <your-agent>/shared/skills/ai2x/
 ```
 
-### 2. Get an API Token
+Don't know where your agent's `shared/skills/` folder is? Just ask your agent:
+*"Where is your shared/skills folder?"* — it will tell you.
 
-- **Self-hosted:** Set up the AI2X Gateway on your server, create tokens via the admin API
-- **ai2x.link:** Contact your provider for a scoped API token
+### 2. Get an API Token (you, the human — not your agent)
 
-### 3. Get a Token
+- **ai2x.link (hosted):** get a free demo token instantly at **https://ai2x.link/token**
+  (demo tokens: 50 requests/day, `pair+push` scopes). For production use, email Allan@msviso.com.
+- **Self-hosted:** create tokens on your own gateway via its admin API (see your gateway docs).
 
-- **Self-hosted:** Your agent generates tokens from the admin API (see `SKILL.md`)
-- **ai2x.link:** Email **Allan@msviso.com** for a temporary demo token
+> ⚠️ **Your agent must NOT request tokens on its own.** Agents use the token already
+> configured by an administrator. Self-requesting tokens breaks token management and
+> exhausts quotas. This applies to demo tokens too.
 
-### 4. Configure
+### 3. Configure
 
-Set your token in the agent's environment:
+Set the token in your agent's environment:
 
 ```markdown
 ### AI2X Display
 - API Base URL: https://ai2x.link (or your self-hosted URL)
-- API Token: ak_xxx
+- API Token: <your token>
 - Channel Index: shared/skills/ai2x/channels.json
+```
+
+Make sure `channels.json` exists (start with an empty one):
+
+```json
+{"channels": []}
 ```
 
 ### 4. Cast!
 
 ```bash
-# Pair a display (read the 6-digit code from ai2x.link on your screen)
+BASE=https://ai2x.link
+export TOKEN=<your-token>
+
+# Pair a display — use the 6-digit code shown on your screen
+# (the code expires after 3 minutes — refresh the page for a new one)
 curl -X POST "$BASE/v1/pair/claim" \
   -H "x-user-token: $TOKEN" \
   -d '{"pairCode":"ABC123", "nickname":"Living Room"}'
@@ -64,6 +101,7 @@ curl -X POST "$BASE/v1/pair/claim" \
 # Push content
 curl -X POST "$BASE/v1/display" \
   -H "x-user-token: $TOKEN" \
+  -H "Content-Type: application/json" \
   -d '{"assignmentId":"as_xxx", "content":{"title":"Hello","body":"**World!**"}}'
 ```
 
@@ -74,92 +112,71 @@ curl -X POST "$BASE/v1/display" \
 │  AI Agent    │────▶│  AI2X Gateway │────▶│ Display │
 │ (OpenClaw)   │     │  (WebSocket)  │     │ (Browser)│
 └─────────────┘     └──────────────┘     └─────────┘
-     │                      │
-     │  POST /v1/display    │  WS push + render
-     │  POST /v1/pair/*     │  Button callbacks
-     └──────────────────────┘
 ```
 
-1. Open `ai2x.link` on any browser (TV, tablet, monitor)
-2. A 6-digit pair code appears
-3. Your agent calls `POST /v1/pair/claim` with the code
-4. The display is now "leased" to your agent
-5. Any `POST /v1/display` pushes content instantly
+1. Open `ai2x.link` in any browser → a **6-digit pair code** appears (valid 3 minutes)
+2. Your agent calls `POST /v1/pair/claim` with the code → the display is now paired ("leased") to your agent
+3. Any `POST /v1/display` pushes content to that screen instantly
+4. The pairing auto-renews while active, and clears when done
+
+## Features
+
+| Capability | Description |
+|-----------|-------------|
+| 🔗 **Pair** | 6-digit pair code, AirPlay-style pairing |
+| 📄 **Cast** | Documents, images, PDFs, charts, alerts, cards |
+| 🗣️ **Speech** | Agent pushes text → the display speaks it (browser TTS) |
+| 🔘 **Interactive** | Buttons on screen — users tap, agent reacts |
+| 📜 **History** | Browse and restore the last 5 pushed items |
+| 🌐 **Multi-screen** | Manage multiple displays by nickname |
+| 🔐 **Self-hosted** | Run your own gateway, or use ai2x.link |
 
 ## Agent Keywords
 
-When this skill is installed, agents understand these commands:
+When this skill is installed, agents understand:
 
 ```
-cast, push to screen, show on display, display this
+cast, push to screen, show on display, display this, 投, 投上去, 上螢幕
 ```
 
 ## API Reference
 
-See [SKILL.md](./SKILL.md) for full API endpoint reference.
+See [SKILL.md](./SKILL.md) for the full API reference (pair, push, events, history, assets, mixed content).
 
-## Requirements
+## Troubleshooting
 
-- An AI2X Gateway instance (self-hosted or ai2x.link)
-- An API token with appropriate scopes
+### Quick Checklist (when a cast fails)
 
-## Troubleshooting & Error Handling
+1. **Token valid?** → `401` → check the token and its daily quota
+2. **Pairing still active?** → `409 Assignment not active` → renew the lease or re-pair
+3. **Display online?** → the screen must be open on `ai2x.link` with a live connection
+4. **Pair code fresh?** → `404 Pair code not found` → codes expire after 3 minutes, refresh the page
+5. **`Content-Type` set?** → `415` → always send `Content-Type: application/json`
 
-### Agent Error Dictionary
+### Error Dictionary
 
-When your AI agent encounters an error from the AI2X API, here's how to interpret and resolve it:
-
-| HTTP | Error Response | Meaning | Agent Action |
-|------|---------------|---------|--------------|
-| 401 | `{"error":"Invalid or expired x-user-token"}` | Token invalid, expired, or daily quota (1000) exhausted | Check token validity. Retry after 1s on quota. Contact admin if persistent. |
-| 404 | `{"error":"Pair code not found"}` | Pair code expired (TTL: 180s) or already claimed | Ask user to refresh the display page (ai2x.link) for a new 6-digit code. |
-| 409 | `{"error":"Assignment not active"}` | Lease expired or display disconnected | Renew lease (`POST /v1/pair/renew`) or re-pair the display. |
-| 409 | `{"error":"Display already assigned"}` | Another agent/claim on this display | Wait for lease to expire or ask user to release from dashboard. |
-| 415 | `{"error":"Unsupported Media Type"}` | Missing `Content-Type: application/json` header | Always include `Content-Type: application/json` on POST requests. |
-| 429 | `{"error":"Rate limit exceeded"}` | Too many requests per second | Wait 1-2 seconds before retrying. Token limit: 1000/day (resets UTC midnight). |
-| 413 | `{"error":"Payload Too Large"}` | Content exceeds 50MB | Reduce size (especially PDF/images). Use Gateway proxy for large files. |
-
-### Quick Agent Checklist
-
-When your agent can't push content, check these in order:
-
-1. **Is the token valid?** → `401` → check API key, quota remaining
-2. **Is the assignment active?** → `409 Assignment not active` → lease expired, renew or re-pair
-3. **Is the display online?** → display must be on `ai2x.link` with active WebSocket
-4. **Is the pair code still showing?** → `404 Pair code not found` → codes expire after 180s, refresh page
-5. **Is Content-Type set?** → `415` → always include `Content-Type: application/json`
+| HTTP | Error | Meaning | Action |
+|------|-------|---------|--------|
+| 401 | Invalid or expired x-user-token | Token bad, expired, or quota exhausted | Check token; retry after 1s; contact admin if persistent |
+| 404 | Pair code not found | Code expired (3 min) or already used | Refresh the display page for a new code |
+| 409 | Assignment not active | Lease expired / display offline | Renew (`POST /v1/pair/renew`) or re-pair |
+| 409 | Display already assigned | Another agent holds this display | Wait for lease to expire, or release from dashboard |
+| 415 | Unsupported Media Type | Missing `Content-Type: application/json` | Always set it on POST requests |
+| 429 | Rate limit exceeded | Too many requests | Wait 1–2 s. Demo token: 50/day. Production token: 1000/day (resets UTC midnight) |
+| 413 | Payload Too Large | Content over 50 MB | Reduce size (PDF/images); use the gateway proxy for large files |
 
 ### Token Best Practices
 
-- Store the token in a config file or environment variable, never hardcode it in shell commands
-- Use scoped tokens (e.g., `push` only if you don't need pair/control)
-- Token quota resets at midnight UTC (1000 requests/day default)
-- If rate-limited (`429`), wait 1-2 seconds before retrying
-
-### Agent Instruction: Do NOT Self-Request Tokens
-
-AI agents must **never** use the self-service token portal or `POST /v1/token/request` on their own.
-Demo tokens are for human evaluation only. Agents should use the token already configured
-in their environment by an administrator. Self-requesting tokens causes:
-- Duplicate/multiple token state with no central management
-- Rapid quota exhaustion (50/day per token)
-- Confusion about which assignment belongs to which token
-
-### Diagnose Endpoint (Coming Soon)
-
-A `GET /v1/diagnose` endpoint is in development that will return a complete health snapshot:
-- Token validity, label, scopes, usage today vs quota
-- All assignments with active/expired status and remaining lease time
-- Display online/offline status and pairing state
-
-This lets your agent self-diagnose with one API call instead of guessing which error code applies.
+- Store the token in a config file or environment variable — never hardcode it in shell commands
+- Use scoped tokens (e.g. `push` only) when you don't need pair/control
+- Quota resets at midnight UTC (demo: 50/day · production: 1000/day)
 
 ---
 
 ## License
 
-This skill is maintained by **Microsense Vision Co., Ltd.**  
-For commercial use, please contact Allan@msviso.com
+Maintained by **Microsense Vision Co., Ltd.**  
+For commercial use, contact Allan@msviso.com
 
 ---
 
