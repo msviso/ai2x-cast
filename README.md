@@ -1,12 +1,11 @@
 # AI2X Cast 🖥️
 
-> **Your AI agent pushes content to any screen with a browser.**
-> Text, images, PDFs, charts, buttons — on the TV, tablet, or monitor next to you, in real time.
+> **Your AI agent pushes content to any screen with a browser.** Text, images, PDFs, charts,
+> buttons — on the TV, tablet, or monitor next to you, in real time.
 
-> **AI should not be trapped inside a chat window.**
-
-**AI2X Cast is a skill for AI agents** (OpenClaw, Claude, ChatGPT, …). Your agent uses it to
-show content on any display. No app to install, no HDMI cable — just open a URL in a browser.
+**AI2X Cast** is a skill for AI agents (OpenClaw, Claude, ChatGPT, …). Your agent uses it to show
+content on any display. No app to install, no HDMI cable — just open `https://ai2x.link` in a
+browser.
 
 ```
 You say:  「把今天的行事曆投到會議室螢幕」
@@ -15,15 +14,15 @@ Agent:    (pushes to the display) → 🖥️ Screen updates instantly
 
 ---
 
-> 🤖 **For AI Agents:** The rest of this README is written for you — install, config, full API
-> surface, error handling, and the agent behavior contract. Humans reading this should jump to
+> 🤖 **For AI Agents:** Everything below this line is written for you — install, config, full
+> API surface, error handling, and the agent behavior contract. Humans can jump to
 > **[VISION.md](./VISION.md)** for the product story and use cases.
 
 ---
 
 ## What AI2X Cast Does (TL;DR)
 
-- Agent calls `POST /v1/pair/claim` with the 6-digit code shown on any browser at `https://ai2x.link`.
+- Agent calls `POST /v1/pair/claim` with the 6-digit code shown on a browser at `https://ai2x.link`.
 - Agent calls `POST /v1/display` (or `/v1/devices/event`) to push structured content.
 - The display updates instantly over WebSocket. The browser renders whatever the Gateway pushes.
 - Pairing auto-renews; clears when done. Token-scoped, multi-screen, self-hostable.
@@ -240,8 +239,8 @@ API. See `docs/ai2x-v1/08-deployment.md` for VPS sizing (2-core / 4 GB RAM is en
 
 - ✅ **v1.0** — REST + WebSocket Gateway, SQLite store, 6-digit pair codes, 50 MB proxy, simple templates
 - ✅ **v1.2** — Interactive templates (`interactive.v1`), `todo.v1` checkbox state, browser TTS, push history
-- 🔄 **v1.3 (in progress — current focus)** — Richer template gallery, multi-asset bundles, asset cache pre-warming, push authorization improvements
-- 🔮 **v2.x (future)** — Multi-tenant isolation, pluggable storage backend, voice round-trip (agent hears display-side audio)
+- 🚧 **v1.3** *(current focus)* — Richer template gallery, multi-asset bundles, asset cache pre-warming, push authorization improvements
+- 🔮 **v2.x** *(future new work)* — Multi-tenant isolation, pluggable storage backend, voice round-trip (agent hears display-side audio), and any larger features not yet scoped
 
 ---
 
